@@ -4,13 +4,13 @@
     <div>
       <router-link class="mui-tab-item" :to="{path:'/cms/page/add',query:{
         page:this.page,
-        siteId:this.params.siteId
+        params:this.params
         }}">
-      <el-button type="primary" style="float: left;" >新增页面</el-button>
+        <el-button type="primary" style="float: left;">新增页面</el-button>
       </router-link>
       <el-form :inline="true" :model="params" class="demo-form-inline" style="float: right;">
         <el-form-item label="所属站点">
-          <el-select v-model="params.siteId" placeholder="请选择站点">
+          <el-select v-model="params.siteId" placeholder="请选择站点" style="width: 150px">
             <el-option
               v-for="item in siteList"
               :label="item.siteName"
@@ -19,11 +19,25 @@
             </el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="页面名称">
+          <el-input v-model="params.pageName" placeholder="页面名称" style="width: 120px"></el-input>
+        </el-form-item>
         <el-form-item label="别名">
-          <el-input v-model="params.pageAliase" placeholder="页面别名"></el-input>
+          <el-input v-model="params.pageAliase" placeholder="页面别名" style="width: 120px"></el-input>
+        </el-form-item>
+        <el-form-item label="页面类型">
+          <el-select v-model="params.pageType" placeholder="请选择" style="width: 100px">
+            <el-option
+              v-for="item in types"
+              :label="item.label"
+              :key="item.value"
+              :value="item.value">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="query">查询</el-button>
+          <el-button @click="findAll">查询全部</el-button>
+          <el-button icon="el-icon-search" circle type="primary" @click="query">搜索</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -51,6 +65,10 @@
           prop="pageType"
           label="页面类型"
           width="100">
+          <template slot-scope="scope">
+            <p v-if="scope.row.pageType=='0'">静态</p>
+            <p v-if="scope.row.pageType=='1'">动态</p>
+          </template>
         </el-table-column>
         <el-table-column
           prop="pageWebPath"
@@ -71,11 +89,13 @@
           <template slot-scope="page">
             <el-button
               size="mini"
-              @click="edit(page.row.pageId)">编辑</el-button>
+              @click="edit(page.row.pageId)">编辑
+            </el-button>
             <el-button
               size="mini"
               type="danger"
-              @click="delete(page.row.pageId)">删除</el-button>
+              @click="del(page.row.pageId)">删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -102,25 +122,34 @@
   export default {
     data() {
       return {
-        siteList:[],
+        siteList: [],
+        types:[{
+          value: '0',
+          label: '静态'
+        }, {
+          value: '1',
+          label: '动态'
+        }],
         pageList: [],
         total: 100,
-        page:1,
-        size:10,
+        page: 1,
+        size: 10,
         params: {
-          siteId:'',
-          pageAliase:''
+          siteId: '',
+          pageAliase: '',
+          pageName:'',
+          pageType:''
         }
       }
     },
     methods: {
       //分页查询
       handleCurrentChange: function (page) {
-        this.page=page;
+        this.page = page;
         this.query();
       },
       handleSizeChange: function (size) {
-        this.size=size;
+        this.size = size;
         this.query();
       },
       //查询
@@ -132,33 +161,55 @@
           }
         )
       },
+      //查询全部
+      findAll:function(){
+        this.params={};
+        this.page=1;
+        this.query();
+      },
       //修改
-      edit:function (pageId) {
+      edit: function (pageId) {
         this.$router.push({
-          path: '/cms/page/edit/'+pageId,
+          path: '/cms/page/edit/' + pageId,
           query: {
-            //this.$route.query表示从路由上取的参数列表
+            //将参数由路由传递
             page: this.page,
-            siteId: this.siteId,
+            params:this.params
           }
         })
       },
       //删除
-      delete:function () {
-        
+      del: function (pageId) {
+        this.$confirm('确认删除吗？', '提示', {}).then(() => {
+          cmsApi.page_del(pageId).then((res) => {
+            if (res.success) {
+              this.$message({
+                type: 'success',
+                message: '删除成功！'
+              });
+              this.query();
+            } else {
+              this.$message({
+                type: 'error',
+                message: '删除失败！'
+              });
+            }
+          })
+        })
+      }},
+      created() {
+        cmsApi.site_findAll().then((res)=>{
+          console.log(res);
+          this.siteList = res.queryResult.list
+        });
+        //从路由上取参数
+        this.page = Number.parseInt(this.$route.query.page || 1);
+        this.params = this.$route.query.params || {};
+        this.query();
+      },
+      mounted() {
       }
-
-    },
-    created(){
-      //从路由上取参数
-      this.page=Number.parseInt(this.$route.query.page||1);
-      this.params.siteId=this.$route.query.siteId||'';
-      this.query();
-    } ,
-    mounted(){
-
     }
-  }
 </script>
 
 <style>

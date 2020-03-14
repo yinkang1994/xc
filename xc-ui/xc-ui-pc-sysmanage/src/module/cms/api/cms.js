@@ -16,10 +16,32 @@ export const page_add = params => {
 };
 
 //修改
-export const page_edit = params => {
-  return http.requestPut(apiUrl + '/cms/page/edit/', params)
+export const page_edit = (pageId,params) => {
+  return http.requestPut(apiUrl + '/cms/page/edit/'+pageId, params)
 };
 //根据id查询页面
 export const page_get = pageId => {
   return http.requestQuickGet(apiUrl + '/cms/page/get/'+pageId)
-}
+};
+//根据id删除页面
+export const page_del = pageId => {
+  return http.requestDelete(apiUrl + '/cms/page/del/'+pageId)
+};
+
+
+
+
+//查询所有站点
+export const site_findAll = () => {
+  return http.requestQuickGet(apiUrl + '/cms/site/findAll/')
+};
+
+//查询所有模板
+export const template_findAll = () => {
+  return http.requestQuickGet(apiUrl + '/cms/template/findAll/')
+};
+
+//根据站点id查询模板
+export const template_findBySiteId = (siteId) => {
+  return http.requestQuickGet(apiUrl + '/cms/template/findBySiteId/'+siteId)
+};

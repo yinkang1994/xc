@@ -2,9 +2,9 @@
   <!--页面静态部分，即view部分-->
   <div>
   <div>
-    <el-form :model="pageForm"  :rules="pageFormRules"  label-width="80px" ref="pageForm">
+    <el-form :model="pageForm" :rules="rules" ref="pageForm" label-width="100px" class="demo-ruleForm">
       <el-form-item label="所属站点" prop="siteId">
-        <el-select v-model="pageForm.siteId" placeholder="请选择站点">
+        <el-select v-model="pageForm.siteId" placeholder="请选择站点" @change="selectSite">
           <el-option v-for="item in siteList"
                      :key="item.siteId"
                      :label="item.siteName"
@@ -33,7 +33,9 @@
       <el-form-item label="物理路径" prop="pagePhysicalPath">
         <el-input v-model="pageForm.pagePhysicalPath" auto-complete="off"></el-input>
       </el-form-item>
-
+      <el-form-item label="数据Url" prop="dataUrl">
+        <el-input v-model="pageForm.dataUrl" auto-complete="off"></el-input>
+      </el-form-item>
       <el-form-item label="类型">
         <el-radio-group v-model="pageForm.pageType">
           <el-radio class="radio" label="0">静态</el-radio>
@@ -47,7 +49,7 @@
     </el-form>
   </div>
   <div slot="footer" class="dialog-footer">
-    <el-button type="primary" v-on:click="addSubmit">提交</el-button>
+    <el-button type="primary" @click="submitForm('pageForm')">提交</el-button>
     <el-button v-on:click="go_back">返回</el-button>
   </div>
   </div>
@@ -69,43 +71,44 @@
           pageAliase:'',
           pageWebPath:'',
           pagePhysicalPath:'',
+          dataUrl:'',
           pageType:'',
           pageCreateTime:new Date()
+        },
+        rules: {
+          siteId: [
+            {required: true, message: '请选择站点', trigger: 'change'},
+          ],
+          templateId: [
+            {required: true, message: '请选择模板', trigger: 'change'}
+          ],
+          pageName: [
+            {required: true, message: '请输入页面名称', trigger: 'blur'}
+          ],
+          pageWebPath: [
+            {required: true, message: '请输入访问路径', trigger: 'blur'}
+          ],
+          pagePhysicalPath: [
+            {required: true, message: '请输入物理路径', trigger: 'blur'}
+          ]
         }
 
       }
     },
-    pageFormRules: {
-      siteId: [        { required: true, message: '请选择站点', trigger: 'blur' },
-
-      ],
-      templateId: [
-        { required: true, message: '请选择模板', trigger: 'blur' }
-      ],
-      pageName: [
-        { required: true, message: '请输入页面名称', trigger: 'blur' }
-      ],
-      pageWebPath: [
-        { required: true, message: '请输入访问路径', trigger: 'blur' }
-      ],
-      pagePhysicalPath: [
-        { required: true, message: '请输入物理路径', trigger: 'blur' }
-      ]
-    },
 
     methods: {
-      addSubmit:function () {
-        this.$refs.pageForm.validate((valid)=>{
+      submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
           if(valid){
             this.$confirm('确认提交吗？','提示',{}).then(()=>{
-              cmsApi.page_add(this.pageForm).then((res)=>{
+              cmsApi.page_edit(this.pageId,this.pageForm).then((res)=>{
                 console.log(res);
                 if(res.success){
                   this.$message({
                     message:'修改成功',
                     type:'success'
                   });
-                  this.$refs['pageForm'].resetFields();
+                  this.go_back();
                 }else{
                   this.$message.error('修改失败');
                 }
@@ -117,23 +120,44 @@
         });
 
       },
+      //选择站点后，动态刷新站点的模板列表
+      selectSite:function (value) {
+        this.pageForm.templateId='';
+        cmsApi.template_findBySiteId(value).then((res)=>{
+          console.log(res);
+          this.templateList = res.queryResult.list;
+        });
+      },
       go_back:function () {
         this.$router.push({
           path:'/cms/page/list',
           query:{
             //this.$route.query表示从路由上取的参数列表
             page:this.$route.query.page,
-            siteId:this.$route.query.siteId,
+            params:this.$route.query.params
           }
         })
       }
     },
     created:function(){
+      //站点列表赋值
+      cmsApi.site_findAll().then((res)=>{
+        console.log(res);
+        this.siteList = res.queryResult.list
+      });
+
+      //模板列表赋值
+      cmsApi.template_findAll().then((res)=>{
+        console.log(res);
+        this.templateList = res.queryResult.list
+      });
+
+      //回显
       this.pageId=this.$route.params.pageId;
       cmsApi.page_get(this.pageId).then((res)=>{
         console.log(res);
         if(res.success){
-          this.pageForm=rse.cmsPage;
+          this.pageForm=res.cmsPage;
         }
         }
       )

@@ -21,7 +21,7 @@ export default [{
       hidden: true
     },
     {
-      path:'/cms/page/edit',
+      path:'/cms/page/edit/:pageId',
       name:'修改页面',
       component: page_edit,
       hidden: true

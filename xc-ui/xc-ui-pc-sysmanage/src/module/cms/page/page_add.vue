@@ -4,7 +4,7 @@
     <div>
       <el-form :model="pageForm" :rules="rules" ref="pageForm" label-width="100px" class="demo-ruleForm">
         <el-form-item label="所属站点" prop="siteId">
-          <el-select v-model="pageForm.siteId" placeholder="请选择站点">
+          <el-select v-model="pageForm.siteId" placeholder="请选择站点"  @change="selectSite">
             <el-option v-for="item in siteList"
                        :key="item.siteId"
                        :label="item.siteName"
@@ -12,8 +12,8 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="模板选择" prop="templateId">
-          <el-select v-model="pageForm.templateId" placeholder="请选择">
+        <el-form-item label="模板选择" prop="templateId" >
+          <el-select v-model="pageForm.templateId" placeholder="请选择" >
             <el-option v-for="item in templateList"
                        :key="item.templateId"
                        :label="item.templateName"
@@ -33,7 +33,9 @@
         <el-form-item label="物理路径" prop="pagePhysicalPath">
           <el-input v-model="pageForm.pagePhysicalPath" auto-complete="off"></el-input>
         </el-form-item>
-
+        <el-form-item label="数据Url" prop="dataUrl">
+          <el-input v-model="pageForm.dataUrl" auto-complete="off"></el-input>
+        </el-form-item>
         <el-form-item label="类型">
           <el-radio-group v-model="pageForm.pageType">
             <el-radio class="radio" label="0">静态</el-radio>
@@ -69,6 +71,7 @@
           pageAliase: '',
           pageWebPath: '',
           pagePhysicalPath: '',
+          dataUrl:'',
           pageType: '',
           pageCreateTime: new Date()
         },
@@ -104,6 +107,8 @@
                     type: 'success'
                   });
                   this.$refs[formName].resetFields();
+                } else if (res.message) {
+                  this.$message.error(res.message);
                 } else {
                   this.$message.error('提交失败');
                 }
@@ -123,13 +128,30 @@
           query: {
             //this.$route.query表示从路由上取的参数列表
             page: this.$route.query.page,
-            siteId: this.$route.query.siteId,
+            params: this.$route.query.params,
           }
         })
-      }
+      },
+      //选择站点后，动态刷新站点的模板列表
+      selectSite:function (value) {
+        cmsApi.template_findBySiteId(value).then((res)=>{
+          console.log(res);
+          this.templateList = res.queryResult.list;
+        });
+      },
+
     },
     created() {
-
+      //站点列表赋值
+      cmsApi.site_findAll().then((res)=>{
+        console.log(res);
+        this.siteList = res.queryResult.list
+      });
+      //模板列表赋值
+      cmsApi.template_findAll().then((res)=>{
+        console.log(res);
+        this.templateList = res.queryResult.list
+      });
     }
   }
 </script>
