@@ -4,6 +4,7 @@ import com.xuecheng.framework.domain.cms.CmsPage;
 import com.xuecheng.framework.domain.cms.request.QueryPageRequest;
 import com.xuecheng.framework.domain.cms.response.CmsCode;
 import com.xuecheng.framework.domain.cms.response.CmsPageResult;
+import com.xuecheng.framework.exception.ExceptionCast;
 import com.xuecheng.framework.model.response.*;
 import com.xuecheng.manage_cms.dao.CmsPageRespository;
 import com.xuecheng.manage_cms.service.CmsPageService;
@@ -51,9 +52,9 @@ public class CmsPageServiceImpl implements CmsPageService {
         } else {
             //条件匹配器
             ExampleMatcher exampleMatcher = ExampleMatcher.matching();
-            //设置页面别名模糊匹配
-            exampleMatcher = exampleMatcher.withMatcher("pageAliase", ExampleMatcher.GenericPropertyMatchers.contains());
-
+            //设置页面别名模糊匹配,名称模糊查询
+            exampleMatcher = exampleMatcher.withMatcher("pageAliase", ExampleMatcher.GenericPropertyMatchers.contains())
+                    .withMatcher("pageName", ExampleMatcher.GenericPropertyMatchers.contains());
 
             //条件对象
             CmsPage cp = new CmsPage();
@@ -63,8 +64,11 @@ public class CmsPageServiceImpl implements CmsPageService {
             if (StringUtils.isNotEmpty(queryPageRequest.getPageAliase())) {
                 cp.setPageAliase(queryPageRequest.getPageAliase());
             }
-            if (StringUtils.isNotEmpty(queryPageRequest.getPageId())) {
-                cp.setPageId(queryPageRequest.getPageId());
+            if (StringUtils.isNotEmpty(queryPageRequest.getPageName())) {
+                cp.setPageName(queryPageRequest.getPageName());
+            }
+            if (StringUtils.isNotEmpty(queryPageRequest.getPageType())) {
+                cp.setPageType(queryPageRequest.getPageType());
             }
             Example<CmsPage> example = Example.of(cp, exampleMatcher);
             pages = cmsPageRespository.findAll(example, pageable);
@@ -82,11 +86,11 @@ public class CmsPageServiceImpl implements CmsPageService {
         //根据站点id、页面访问地址、页面名称查找页面是否存在
         CmsPage cp = cmsPageRespository.findBySiteIdAndPageNameAndPageWebPath(cmsPage.getSiteId(), cmsPage.getPageName(), cmsPage.getPageWebPath());
         if (cp != null) {
-            return new CmsPageResult(CmsCode.CMS_ADDPAGE_EXISTSNAME, null);
-        } else {
-            CmsPage save = cmsPageRespository.save(cmsPage);
-            return new CmsPageResult(CommonCode.SUCCESS, save);
+            ExceptionCast.cast(CmsCode.CMS_ADDPAGE_EXISTSNAME);
         }
+        CmsPage save = cmsPageRespository.save(cmsPage);
+        return new CmsPageResult(CommonCode.SUCCESS, save);
+
     }
 
     @Override
@@ -97,19 +101,38 @@ public class CmsPageServiceImpl implements CmsPageService {
 
 
     @Override
-    public CmsPageResult edit(CmsPage cmsPage) {
-        //先根据id删除该页面
-        cmsPageRespository.deleteById(cmsPage.getPageId());
-
-        //再添加
-        CmsPage save = cmsPageRespository.save(cmsPage);
-        return new CmsPageResult(CommonCode.SUCCESS,save);
+    public CmsPageResult edit(String pageId, CmsPage cmsPage) {
+        //先根据id查找该页面
+        Optional<CmsPage> op = cmsPageRespository.findById(pageId);
+        if (op.isPresent()) {
+            CmsPage cp = op.get();
+            //更新站点id
+            cp.setSiteId(cmsPage.getSiteId());
+            //更新模板id
+            cp.setTemplateId(cmsPage.getTemplateId());
+            //更新页面别名
+            cp.setPageAliase(cmsPage.getPageAliase());
+            //更新页面名称
+            cp.setPageName(cmsPage.getPageName());
+            //更新访问路径
+            cp.setPageWebPath(cmsPage.getPageWebPath());
+            //更新物理路径
+            cp.setPagePhysicalPath(cmsPage.getPagePhysicalPath());
+            //更新页面类型
+            cp.setPageType(cmsPage.getPageType());
+            //执行更新
+            CmsPage save = cmsPageRespository.save(cp);
+            if (save != null) {
+                return new CmsPageResult(CommonCode.SUCCESS, save);
+            }
+        }
+        return new CmsPageResult(CommonCode.FAIL, null);
     }
 
     @Override
     public CmsPageResult get(String pageId) {
         Optional<CmsPage> op = cmsPageRespository.findById(pageId);
-        if(op.isPresent()) {
+        if (op.isPresent()) {
             CmsPage cmsPage = op.get();
             return new CmsPageResult(CommonCode.SUCCESS, cmsPage);
         }

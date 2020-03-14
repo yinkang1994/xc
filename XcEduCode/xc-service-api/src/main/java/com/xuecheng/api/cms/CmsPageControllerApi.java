@@ -1,5 +1,6 @@
 package com.xuecheng.api.cms;
 
+import com.xuecheng.framework.domain.cms.CmsConfig;
 import com.xuecheng.framework.domain.cms.CmsPage;
 import com.xuecheng.framework.domain.cms.request.QueryPageRequest;
 import com.xuecheng.framework.domain.cms.response.CmsPageResult;
@@ -62,9 +63,13 @@ public interface CmsPageControllerApi {
 
     /**
      * 修改页面
+     * @param pageId 页面id
      * @param cmsPage 页面对象
      * @return 该页面和操作结果
      */
     @ApiOperation("修改页面")
-    public CmsPageResult edit(CmsPage cmsPage);
+    @ApiImplicitParam(name = "pageId", value = "页面id",
+            required = true, paramType = "path", dataType = "string")
+    public CmsPageResult edit(String pageId,CmsPage cmsPage);
+
 }

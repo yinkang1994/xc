@@ -41,15 +41,15 @@ public class CmsPageController implements CmsPageControllerApi {
     }
 
     @Override
-    @GetMapping("/delete/{pageId}")
+    @DeleteMapping("/del/{pageId}")
     public ResponseResult deleteByPageId(@PathVariable(value = "pageId",required = true) String pageId) {
         return cmsPageService.deleteByPageId(pageId);
     }
 
 
     @Override
-    @PutMapping("/edit")
-    public CmsPageResult edit(CmsPage cmsPage) {
-        return cmsPageService.edit(cmsPage);
+    @PutMapping("/edit/{pageId}")
+    public CmsPageResult edit(@PathVariable(value = "pageId",required = true) String pageId,@RequestBody CmsPage cmsPage) {
+        return cmsPageService.edit(pageId,cmsPage);
     }
 }

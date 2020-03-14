@@ -104,7 +104,7 @@ public class HttpClient {
 	}
 
 	/**
-	 * set http post,put param
+	 * set cms post,put param
 	 */
 	private void setEntity(HttpEntityEnclosingRequestBase http) {
 		if (param != null) {

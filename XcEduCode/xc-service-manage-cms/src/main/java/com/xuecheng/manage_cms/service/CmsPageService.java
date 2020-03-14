@@ -37,10 +37,11 @@ public interface CmsPageService {
 
     /**
      * 修改页面
+     * @param pageId 页面id
      * @param cmsPage 页面对象
      * @return 页面对象和操作结果
      */
-    CmsPageResult edit(CmsPage cmsPage);
+    CmsPageResult edit(String pageId,CmsPage cmsPage);
 
     /**
      * 根据id查找页面
