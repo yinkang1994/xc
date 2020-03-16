@@ -2,15 +2,15 @@
   <!--页面静态部分，即view部分-->
   <div>
     <div>
-      <router-link class="mui-tab-item" :to="{path:'/cms/page/add',query:{
+      <router-link class="mui-tab-item" :to="{path:'/cms/template/add',query:{
         page:this.page,
         params:this.params
         }}">
-        <el-button type="primary" style="float: left;">新增页面</el-button>
+        <el-button type="primary" style="float: left;">添加模板</el-button>
       </router-link>
       <el-form :inline="true" :model="params" class="demo-form-inline" style="float: right;">
         <el-form-item label="所属站点">
-          <el-select v-model="params.siteId" placeholder="请选择站点" style="width: 120px">
+          <el-select v-model="params.siteId" placeholder="请选择站点" style="width: 150px">
             <el-option
               v-for="item in siteList"
               :label="item.siteName"
@@ -19,21 +19,8 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="页面名称">
-          <el-input v-model="params.pageName" placeholder="页面名称" style="width: 90px"></el-input>
-        </el-form-item>
-        <el-form-item label="别名">
-          <el-input v-model="params.pageAliase" placeholder="页面别名" style="width: 90px"></el-input>
-        </el-form-item>
-        <el-form-item label="类型">
-          <el-select v-model="params.pageType" placeholder="请选择" style="width: 90px">
-            <el-option
-              v-for="item in types"
-              :label="item.label"
-              :key="item.value"
-              :value="item.value">
-            </el-option>
-          </el-select>
+        <el-form-item label="模板名称">
+          <el-input v-model="params.templateName" placeholder="模板名称" style="width: 120px"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button @click="findAll">查询全部</el-button>
@@ -44,58 +31,32 @@
 
     <div>
       <el-table
-        :data="pageList"
+        :data="templateList"
         border
         style="width: 100%">
         <el-table-column
           type="index"
-          width="50">
-        </el-table-column>
-        <el-table-column
-          prop="pageName"
-          label="页面名称"
-          width="120">
-        </el-table-column>
-        <el-table-column
-          prop="pageAliase"
-          label="别名"
-          width="120">
-        </el-table-column>
-        <el-table-column
-          prop="pageType"
-          label="类型"
           width="60">
-          <template slot-scope="scope">
-            <p v-if="scope.row.pageType=='0'">静态</p>
-            <p v-if="scope.row.pageType=='1'">动态</p>
-          </template>
         </el-table-column>
         <el-table-column
-          prop="pageWebPath"
-          label="访问路径"
-          width="150">
+          prop="templateName"
+          label="模板名称">
         </el-table-column>
         <el-table-column
-          prop="pagePhysicalPath"
-          label="物理路径"
-          width="200">
+          prop="siteName"
+          label="所属站点">
         </el-table-column>
-        <el-table-column
-          prop="pageCreateTime"
-          label="创建时间"
-          width="200">
-        </el-table-column>
-        <el-table-column label="操作" >
-          <template slot-scope="page">
+
+        <el-table-column label="操作">
+          <template slot-scope="template">
             <el-button
               size="mini"
-              @click="edit(page.row.pageId)">编辑
+              @click="edit(template.row.templateId)">编辑
             </el-button>
-            <br/>
             <el-button
               size="mini"
               type="danger"
-              @click="del(page.row.pageId)">删除
+              @click="del(template.row.templateId)">删除
             </el-button>
           </template>
         </el-table-column>
@@ -124,22 +85,13 @@
     data() {
       return {
         siteList: [],
-        types:[{
-          value: '0',
-          label: '静态'
-        }, {
-          value: '1',
-          label: '动态'
-        }],
-        pageList: [],
-        total: 100,
+        templateList: [],
+        total: 10,
         page: 1,
         size: 10,
         params: {
           siteId: '',
-          pageAliase: '',
-          pageName:'',
-          pageType:''
+          templateName: ''
         }
       }
     },
@@ -155,10 +107,10 @@
       },
       //查询
       query: function () {
-        cmsApi.page_list(this.page, this.size, this.params).then((res) => {
+        cmsApi.template_list(this.page, this.size, this.params).then((res) => {
             console.log(res);
             this.total = res.queryResult.total;
-            this.pageList = res.queryResult.list
+            this.templateList = res.queryResult.list;
           }
         )
       },
@@ -169,9 +121,9 @@
         this.query();
       },
       //修改
-      edit: function (pageId) {
+      edit: function (templateId) {
         this.$router.push({
-          path: '/cms/page/edit/' + pageId,
+          path: '/cms/template/edit/' + templateId,
           query: {
             //将参数由路由传递
             page: this.page,
@@ -180,9 +132,9 @@
         })
       },
       //删除
-      del: function (pageId) {
+      del: function (templateId) {
         this.$confirm('确认删除吗？', '提示', {}).then(() => {
-          cmsApi.page_del(pageId).then((res) => {
+          cmsApi.template_del(templateId).then((res) => {
             if (res.success) {
               this.$message({
                 type: 'success',
