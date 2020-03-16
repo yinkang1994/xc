@@ -18,6 +18,8 @@ public class CmsTemplate {
 
     //站点ID
     private String siteId;
+    //所属站点名称
+    private String siteName;
     //模版ID
     @Id
     private String templateId;
